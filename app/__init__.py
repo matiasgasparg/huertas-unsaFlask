@@ -5,7 +5,7 @@ from .routes.user_bp import user_bp
 from .routes.img_bp import img_bp
 from .routes.not_bp import not_bp
 from .routes.admin_bp import admin_bp
-
+from .routes.huertas_bp import huertas_bp
 from config import Config
 from flask_cors import CORS
 from .database import DatabaseConnection
@@ -30,6 +30,8 @@ def init_app():
     app.register_blueprint(img_bp, url_prefix = '/imagen')
     app.register_blueprint(not_bp, url_prefix = '/noticia')
     app.register_blueprint(admin_bp, url_prefix = '/admin')
+    app.register_blueprint(huertas_bp, url_prefix = '/huertas')
+
 
 
 

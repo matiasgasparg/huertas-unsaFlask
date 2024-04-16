@@ -20,7 +20,7 @@ class Img_date:
         self.idimagen = kwargs.get('idimagen')
         self.url = kwargs.get('url')
         self.descripcion = kwargs.get('descripcion') 
-
+        self.idhuertas= kwargs.get('idhuertas')
 
 
     def serialize(self):
@@ -28,6 +28,7 @@ class Img_date:
             "idimagen": self.idimagen,
             "url": self.url,
             "descripcion": self.descripcion,
+            "idhuertas":self.idhuertas
         }
        
 class Not_date:
@@ -64,5 +65,21 @@ class Admin_date:
         "password": self.password,
         "admin": self.admin
     }
+
+class Huertas_date:
+    def __init__(self,**kwargs):
+        self.idhuertas = kwargs.get("idhuertas")   
+        self.titulo = kwargs.get("titulo")
+        self.direccion= kwargs.get("direccion")
+        self.descripcion = kwargs.get("descripcion")
+        self.url = kwargs.get("url")
+    def serialize (self):
+        return{
+            'idhuertas': self.idhuertas,
+            'titulo': self.titulo,
+            'direccion': self.direccion,
+            'descripcion': self.descripcion,
+            'url': self.url
+        }
 
 

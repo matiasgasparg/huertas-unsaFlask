@@ -36,7 +36,7 @@ class userController:
         return users, 200
 
     @classmethod
-    def create(cls):
+    def create(cls,idhuertas):
         try:
 
             """Create a new User"""
@@ -45,13 +45,9 @@ class userController:
             lastname = data['lastname']
             email = data['email']
             telefono = data['telefono']
-
-       
-
-        
             new_user = User(**data)
 
-            if User.create(new_user):
+            if User.create(new_user,idhuertas):
                 return jsonify({'message': 'Usuario creado exitosamente'}), 201
             else:
                 return jsonify({'message': 'Error al crear usuario'}), 500

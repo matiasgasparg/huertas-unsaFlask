@@ -6,29 +6,28 @@ class Img(Img_date):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
     @classmethod
-    def get(cls, descripcion):
+    def get_by_huerta(cls, idhuertas):
         try:
-            descripcion = descripcion.upper()  # Convertir la descripción a mayúsculas
-
+            # Consultar las imágenes relacionadas con la huerta
             query = """
-                SELECT idimagen, url, descripcion
-                FROM imagen WHERE descripcion = %s
+                SELECT imagen.idimagen, imagen.url
+                FROM imagen
+                JOIN huertas_has_imagen ON imagen.idimagen = huertas_has_imagen.imagen_idimagen
+                WHERE huertas_has_imagen.huertas_idhuertas = %s
             """
-            params = (descripcion,)
+            params = (idhuertas,)
             results = DatabaseConnection.fetch_all(query, params=params)
     
             if results:
-                # Si se encontraron resultados, los convertimos en instancias de Img
-                return [cls(**dict(zip(['idimagen', 'url', 'descripcion'], row))) for row in results]
+                # Si se encontraron resultados, devolver una lista de instancias de Img
+                return [cls(**dict(zip(['idimagen', 'url'], row))) for row in results]
             else:
-                raise userNotFound(descripcion)  # Si no se encuentra la imagen, lanzar la excepción userNotFound
+                return None
         except Exception as e:
-            print("Error al obtener la imagen:", e)
+            print("Error al obtener las imágenes:", e)
             return None
         finally:
-            DatabaseConnection.close_connection()  # Cerrar la conexión después de realizar la consulta
-   
-
+            DatabaseConnection.close_connection()  # Cierra la conexión después de realizar la consulta
     @classmethod
     def get_all(cls):
 
@@ -41,29 +40,56 @@ class Img(Img_date):
         if results is not None:
             for result in results:
                 imgs.append(cls(**dict(zip(['idimagen', 'genero', 'url', 'descripcion', 'precio'], result))))
-        return imgs
+            return imgs
     @classmethod
-    def create(cls, img):
+    def create(cls, url, idhuertas):
         try:
-            query = """INSERT INTO imagen ( url, descripcion) 
-                       VALUES (%s, %s)"""  # Corregir la consulta SQL
-    
-            params = (img.url, img.descripcion)  # Corregir la tupla de parámetros
+            # Insertar la imagen en la tabla imagen
+            query = """INSERT INTO imagen (url) 
+                       VALUES (%s)"""
+            params = (url,)  # Corregido para que sea una tupla
+            DatabaseConnection.execute_query(query, params=params)
+
+            # Obtener el ID de la imagen recién insertada
+            imagen_id = DatabaseConnection.fetch_one("SELECT LAST_INSERT_ID()")[0]
+
+            # Insertar la relación en la tabla huertas_has_imagen
+            query = """INSERT INTO huertas_has_imagen (huertas_idhuertas, imagen_idimagen) 
+                       VALUES (%s, %s)"""
+            params = (idhuertas, imagen_id)
+            DatabaseConnection.execute_query(query, params=params)
+            DatabaseConnection.close_connection()  # Cierra la conexión después de realizar la consulta 
+
+            return True
+        except Exception as e:
+            print("Error al crear la imagen:", e)
+            return False
+   
+    @classmethod
+    def delete(cls, idimagen):
+        try:
+            # Eliminar la relación en la tabla huertas_has_imagen
+            if cls.deleteRelationByImageId(idimagen):
+                # Ahora que no hay dependencias en la tabla huertas_has_imagen, eliminar la imagen de la tabla imagen
+                query = "DELETE FROM imagen WHERE idimagen = %s"
+                params = (idimagen,)
+                DatabaseConnection.execute_query(query, params=params)
+                return True
+            else:
+                raise Exception("No se pudo eliminar la relación en la tabla huertas_has_imagen.")
+        except Exception as e:
+            print("Error al eliminar la imagen y su relación con la huerta:", e)
+            return False
+    @classmethod
+    def deleteRelationByImageId(cls, idimagen):
+        try:
+            query = "DELETE FROM huertas_has_imagen WHERE imagen_idimagen = %s"
+            params = (idimagen,)
             DatabaseConnection.execute_query(query, params=params)
             return True
         except Exception as e:
-            print("Error al crear la IMAGEN:", e)
+            print("Error al eliminar la relación en la tabla huertas_has_imagen:", e)
             return False
-    @classmethod
-    def delete(cls, descripcion):
-        try:
-            descripcion = descripcion.upper()
-            query = """DELETE FROM imagen WHERE UPPER(descripcion) = %s"""
-            params = (descripcion,)
-            DatabaseConnection.execute_query(query, params=params)
-            return True
-        except Exception as e:
-            print("Error al eliminar imágenes:", e)
-            return False
+
 
  

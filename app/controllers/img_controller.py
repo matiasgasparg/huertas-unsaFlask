@@ -26,39 +26,47 @@ class imgController:
         else:
             return 'No se encontró ninguna imagen en la solicitud'
     @classmethod
-    def create(cls):
+    def create(cls, idhuertas):
         try:
-            # Obtener los datos de la imagen del cuerpo de la solicitud JSON
+            # Obtener los datos de la solicitud JSON
             data = request.json
-            url = data['url']
-            descripcion = data['descripcion']
-
-            new_img = Img(**data)
-            print(new_img)
-            # Llamar al método de clase 'create' del modelo de imagen para crear la imagen en la base de datos
-            if Img.create(new_img):
-                return jsonify({'message': 'Imagen creada exitosamente'}), 201
+            
+            # Verificar si 'urls' está presente en los datos recibidos y si es una lista
+            if 'urls' in data and isinstance(data['urls'], list):
+                urls = data['urls']
+        
+                for url in urls:
+                    # Llamar al método create de la clase Img para crear la imagen en la base de datos
+                    if not Img.create(url, idhuertas):
+                        # Si hay un error al crear la imagen, devolver un mensaje de error
+                        return jsonify({'message': 'Error al crear imágenes'}), 500
+        
+                # Si todas las imágenes se crean correctamente, devolver un mensaje de éxito
+                return jsonify({'message': 'Imágenes creadas exitosamente'}), 200
             else:
-                return jsonify({'message': 'Error al crear imagen'}), 500
-    
+                return jsonify({'message': 'No se proporcionó una lista de URLs válida'}), 400
+        
         except Exception as e:
-            # Manejar cualquier error que ocurra durante el proceso de creación de la imagen
+            # Manejar cualquier error que ocurra durante el proceso de creación de las imágenes
+            print("Error al crear las imágenes:", e)
             return jsonify({'message': 'Error en la solicitud'}), 400
 
-    @classmethod
-    def get(cls, descripcion):
-        try:
-            imgs = Img.get(descripcion)  # Aquí se espera una lista de imágenes
 
+    @classmethod
+    def get_by_huerta(cls, idhuertas):
+        try:
+            # Llamar al método get_by_huerta de la clase Img para obtener las imágenes de la huerta
+            imgs = Img.get_by_huerta(idhuertas)
+            
+            # Serializar las imágenes y devolverlas como respuesta
             if imgs:
                 serialized_imgs = [img.serialize() for img in imgs]
-                return serialized_imgs, 200
+                return jsonify(serialized_imgs), 200
             else:
-                raise userNotFound(descripcion)  # Si no se encuentran imágenes, lanzar la excepción userNotFound
+                return jsonify({'message': 'No se encontraron imágenes para la huerta'}), 404
         except Exception as e:
-            print("Error al obtener la imagen:", e)
+            print("Error al obtener las imágenes:", e)
             return jsonify({'message': 'Error en la solicitud'}), 500
-
     @classmethod
     def get_all(cls):
         """Get all imgs"""
@@ -68,13 +76,17 @@ class imgController:
             imgs.append(img.serialize())
         return imgs, 200
     @classmethod
-    def delete(cls, descripcion):
+    def delete(cls, idimagen):
         try:
-            # Eliminar todas las imágenes con el nombre del álbum (descripción) proporcionado
-            if Img.delete(descripcion):
-                return jsonify({'message': 'Imagen eliminada exitosamente'}), 200
+            # Eliminar la imagen de la tabla imagen
+            if Img.delete(idimagen):
+                # Eliminar la relación en la tabla huertas_has_imagen
+                if Img.deleteRelationByImageId(idimagen):
+                    return jsonify({'message': 'Imagen eliminada exitosamente'}), 200
+                else:
+                    raise userNotFound(f"La relación huertas_has_imagen no se encontró para idimagen {idimagen} e idhuerta {idhuerta}")
             else:
-                raise userNotFound(descripcion)  # Si no se encuentran imágenes para eliminar, lanzar la excepción userNotFound
+                raise userNotFound(f"La imagen no se encontró para idimagen {idimagen}")
         except Exception as e:
             print("Error al eliminar la imagen:", e)
-            return jsonify({'message': 'Error en la solicitud'}), 500        
+            return jsonify({'message': 'Error en la solicitud'}), 500

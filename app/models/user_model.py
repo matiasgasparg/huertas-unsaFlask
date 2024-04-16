@@ -42,13 +42,23 @@ class User(User_date):
             DatabaseConnection.close_connection()  # Cerrar la conexión después de realizar la consulta
 
     @classmethod
-    def create(cls, user):
+    def create(cls, user,idhuertas):
         """Crear un nuevo usuario"""
         try:
             query = """INSERT INTO usuarios (name, lastname, email,telefono) 
                        VALUES (%s, %s, %s, %s)"""
             params = (user.name, user.lastname, user.email,user.telefono)
             DatabaseConnection.execute_query(query, params=params)
+            
+            # Obtener el ID del usuario recién insertado
+            huertas_id = DatabaseConnection.fetch_one("SELECT LAST_INSERT_ID()")[0]
+
+            # Insertar la relación en la tabla huertas_has_usuarios
+            query = """INSERT INTO huertas_has_usuarios (huertas_idhuertas, usuarios_id_usuario) 
+                       VALUES (%s, %s)"""
+            params = (idhuertas, huertas_id)
+            DatabaseConnection.execute_query(query, params=params)
+
             return True
         except Exception as e:
             print("Error al crear usuario:", e)
