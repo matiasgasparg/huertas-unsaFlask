@@ -19,13 +19,17 @@ SECRET_KEY = 'Pato'
 class userController:
 # Función para obtener un usuario por su ID de la base de datos
     @classmethod
-    def get(cls, id_usuario):
-            user = User.get(id_usuario)  # Aquí se espera un ID de usuario, no un objeto User
-            if user is not None:
-                return user.serialize(), 200
+    def get(cls, idhuertas):
+        try:
+            users = User.get(idhuertas)  # Aquí se espera un ID de usuario, no un objeto User
+            if users:
+                serialized_users=[user.serialize()for user in users]
+                return jsonify(serialized_users), 200
             else:
-                # Si no se encuentra el user, lanza la excepción userNotFound
-                raise userNotFound(id_usuario)
+                return jsonify({'message': 'No se encontraron usuarios para la huerta'}), 404
+        except Exception as e:
+            print("Error al obtener los usuarios:", e)
+            return jsonify({'message': 'Error en la solicitud'}), 500   
     @classmethod
     def get_all(cls):
         """Get all users"""
@@ -104,18 +108,25 @@ class userController:
             return jsonify({'message': 'Datos inválidos'}), 401
     @classmethod
     def delete(cls,id_usuario):
-        """Delete a User"""
-        if not User.exists(id_usuario):
-            raise userNotFound(id_usuario)
+        try:
+            # Eliminar la imagen de la tabla imagen
+            if User.delete(id_usuario):
+                # Eliminar la relación en la tabla huertas_has_imagen
+                if User.deleteRelationByImageId(id_usuario):
+                    return jsonify({'message': 'Usuario eliminada exitosamente'}), 200
+                else:
+                    raise userNotFound(f"La relación huertas_has_usuario no se encontró para usuario {id_usuario} e idhuerta {idhuerta}")
+            else:
+                raise userNotFound(f"La Huerta no se encontró para usuario {id_usuario}")
+        except Exception as e:
+            print("Error al eliminar la imagen:", e)
+            return jsonify({'message': 'Error en la solicitud'}), 500
 
-        User.delete(id_usuario)
-        return {'message': 'User deleted successfully'}, 204
     @staticmethod
     def validate_input_data(data):
         """Validate input data"""
         if len(data.get('name', '')) < 3:
             raise InvalidDataError("El Nombre debe tener al menos 3 caracteres")
-    
       
 
     

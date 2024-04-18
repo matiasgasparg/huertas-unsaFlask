@@ -5,16 +5,20 @@ class User(User_date):
         super().__init__(**kwargs)
         
     @classmethod
-    def get(cls, id_usuario):
+    def get(cls, idhuertas):
         """Obtener un usuario por su ID"""
         try:
-            query = """SELECT id_usuario, name, lastname, email,telefono
-                       FROM usuarios WHERE id_usuario = %s"""
-            params = (id_usuario,)
-            result = DatabaseConnection.fetch_one(query, params=params)
+            query = """SELECT usuarios.id_usuario, usuarios.name, usuarios.lastname, usuarios.email, usuarios.telefono
+                       FROM usuarios
+                       JOIN huertas_has_usuarios ON usuarios.id_usuario = huertas_has_usuarios.usuarios_id_usuario
+                       WHERE huertas_has_usuarios.huertas_idhuertas = %s
+                    """
+            
+            params = (idhuertas,)
+            results = DatabaseConnection.fetch_all(query, params=params)
 
-            if result is not None:
-                return cls(**dict(zip(['id_usuario', 'name', 'lastname', 'email','telefono'], result)))
+            if results is not None:
+                return  [cls(**dict(zip(['id_usuario', 'name', 'lastname', 'email','telefono'], row))) for row in results]
             return None
         except Exception as e:
             print("Error al obtener usuario:", e)
@@ -86,20 +90,32 @@ class User(User_date):
             return False
         finally:
             DatabaseConnection.close_connection()  # Cerrar la conexión después de realizar la consulta
-
     @classmethod
-    def delete(cls, id_usuario):
-        """Eliminar un usuario"""
+    def delete(cls,id_usuario):
         try:
-            query = "DELETE FROM usuarios WHERE id_usuario = %s"
+            # Eliminar la relación en la tabla huertas_has_imagen
+            if cls.deleteRelationByImageId(id_usuario):
+                # Ahora que no hay dependencias en la tabla huertas_has_imagen, eliminar la imagen de la tabla imagen
+                query = "DELETE FROM usuarios WHERE id_usuario = %s"
+                params = (id_usuario,)
+                DatabaseConnection.execute_query(query, params=params)
+                return True
+            else:
+                raise Exception("No se pudo eliminar la relación en la tabla.")
+        except Exception as e:
+            print("Error al eliminar la imagen y su relación con la huerta:", e)
+            return False
+    @classmethod
+    def deleteRelationByImageId(cls, id_usuario):
+        try:
+            query = "DELETE FROM huertas_has_usuarios WHERE usuarios_id_usuario = %s"
             params = (id_usuario,)
             DatabaseConnection.execute_query(query, params=params)
             return True
         except Exception as e:
-            print("Error al eliminar usuario:", e)
+            print("Error al eliminar la relación en la tabla:", e)
             return False
-        finally:
-            DatabaseConnection.close_connection()  # Cerrar la conexión después de realizar la consulta
+
 
     @classmethod
     def exists(cls, id_usuario):
