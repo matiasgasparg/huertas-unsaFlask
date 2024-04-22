@@ -19,6 +19,20 @@ SECRET_KEY = 'Pato'
 class userController:
 # Función para obtener un usuario por su ID de la base de datos
     @classmethod
+    def get_asistencia(cls, idhuertas, id_practica):
+        try:
+            # Obtener la asistencia de todos los usuarios para una práctica específica y una huerta determinada
+            users = User.get_asistencia(idhuertas, id_practica)
+            
+            if users:
+                serialized_users = [user.serialize() for user in users]
+                return jsonify(serialized_users), 200
+            else:
+                return jsonify({'message': 'No se encontraron usuarios o asistencia para la huerta y práctica especificadas'}), 404
+        except Exception as e:
+            print("Error al obtener los usuarios y su asistencia:", e)
+            return jsonify({'message': 'Error en la solicitud'}), 500
+    @classmethod
     def get(cls, idhuertas):
         try:
             users = User.get(idhuertas)  # Aquí se espera un ID de usuario, no un objeto User
@@ -30,14 +44,6 @@ class userController:
         except Exception as e:
             print("Error al obtener los usuarios:", e)
             return jsonify({'message': 'Error en la solicitud'}), 500   
-    @classmethod
-    def get_all(cls):
-        """Get all users"""
-        user_objects = User.get_all()
-        users = []
-        for user in user_objects:
-            users.append(user.serialize())
-        return users, 200
 
     @classmethod
     def create(cls,idhuertas):
@@ -45,6 +51,7 @@ class userController:
 
             """Create a new User"""
             data = request.json
+            print(data)
             name=data['name']
             lastname = data['lastname']
             email = data['email']
@@ -58,22 +65,26 @@ class userController:
 
         except Exception as e:
             return jsonify({'message': 'Error en la solicitud'}), 400    
-    @classmethod
-    def update(cls, id_usuario):
-        """Update a User"""
-        data = request.json
-        field_to_update = data.get('field')  # Campo que se desea actualizar
-        value = data.get('value')  # Nuevo valor para el campo
-        valid_fields = ['username', 'email', 'name']  # Lista de campos válidos
+    @staticmethod
+    def asistencia(id_usuario, id_practica):
+        try:
+            data = request.json
+            asistio = data['asistio']
 
-        if field_to_update in valid_fields:
-            if User.update(id_usuario, field_to_update, value):
-                return jsonify({'message': f'{field_to_update.capitalize()} actualizado exitosamente'}), 200
+            # Verificar si el usuario ya tiene una asistencia registrada en esta práctica
+            if User.tiene_asistencia_registrada(id_usuario, id_practica):
+                print("Aqui")
+                return jsonify({'message': 'El usuario ya tiene una asistencia registrada en esta práctica'}), 400
+
+            # El usuario no tiene una asistencia registrada, proceder con el registro
+            if User.registrar_asistencia(id_usuario, id_practica, asistio):
+                return jsonify({'message': 'Asistencia registrada exitosamente'}), 200
             else:
-                raise userNotFound(id_usuario)
-        else:
-            return jsonify({'message': 'Campo no válido para actualización'}), 400
-    
+                return jsonify({'message': 'Error al registrar la asistencia'}), 500
+        except Exception as e:
+            print("Error al registrar la asistencia:", e)
+            return jsonify({'message': 'Error en la solicitud'}), 500
+
     @classmethod
     def login(cls):
         data = request.get_json()

@@ -5,7 +5,7 @@ class User_date:
         self.lastname = kwargs.get('lastname')
         self.email = kwargs.get('email')
         self.telefono = kwargs.get('telefono')
-
+        self.asistio= kwargs.get('asistio')
 
     def serialize(self):
         return {
@@ -13,7 +13,8 @@ class User_date:
             "name": self.name,
             "lastname": self.lastname,
             "email": self.email,
-            "telefono": self.telefono
+            "telefono": self.telefono,
+            "asistio":self.asistio
 
 
         }

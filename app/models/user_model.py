@@ -5,10 +5,34 @@ class User(User_date):
         super().__init__(**kwargs)
         
     @classmethod
+    def get_asistencia(cls, idhuertas, id_practica):
+        """Obtener la asistencia de todos los usuarios para una práctica específica y una huerta determinada"""
+        try:
+            query = """
+                SELECT usuarios.id_usuario, usuarios.name, usuarios.lastname, usuarios.email, usuarios.telefono, asistencia.asistio
+                FROM usuarios
+                INNER JOIN asistencia ON usuarios.id_usuario = asistencia.id_usuario
+                INNER JOIN practica_asistencia ON asistencia.id_asistencia = practica_asistencia.id_asistencia
+                INNER JOIN huertas_has_usuarios ON usuarios.id_usuario = huertas_has_usuarios.usuarios_id_usuario
+                WHERE huertas_has_usuarios.huertas_idhuertas = %s AND practica_asistencia.idpractica = %s
+            """
+            params = (idhuertas, id_practica)
+            results = DatabaseConnection.fetch_all(query, params=params)
+
+            if results is not None:
+                return [cls(**dict(zip(['id_usuario', 'name', 'lastname', 'email', 'telefono', 'asistio'], row))) for row in results]
+            return None
+        except Exception as e:
+            print("Error al obtener la asistencia de los usuarios:", e)
+            return None
+        finally:
+            DatabaseConnection.close_connection()  # Cerrar la conexión después de realizar la consulta
+
+    @classmethod
     def get(cls, idhuertas):
         """Obtener un usuario por su ID"""
         try:
-            query = """SELECT usuarios.id_usuario, usuarios.name, usuarios.lastname, usuarios.email, usuarios.telefono
+            query = """SELECT usuarios.id_usuario, usuarios.name, usuarios.lastname, usuarios.email, usuarios.telefono,usuarios.asistio
                        FROM usuarios
                        JOIN huertas_has_usuarios ON usuarios.id_usuario = huertas_has_usuarios.usuarios_id_usuario
                        WHERE huertas_has_usuarios.huertas_idhuertas = %s
@@ -18,7 +42,7 @@ class User(User_date):
             results = DatabaseConnection.fetch_all(query, params=params)
 
             if results is not None:
-                return  [cls(**dict(zip(['id_usuario', 'name', 'lastname', 'email','telefono'], row))) for row in results]
+                return  [cls(**dict(zip(['id_usuario', 'name', 'lastname', 'email','telefono','asistio'], row))) for row in results]
             return None
         except Exception as e:
             print("Error al obtener usuario:", e)
@@ -26,24 +50,6 @@ class User(User_date):
         finally:
             DatabaseConnection.close_connection()  # Cerrar la conexión después de realizar la consulta
 
-    @classmethod
-    def get_all(cls):
-        """Obtener todos los usuarios"""
-        try:
-            query = """SELECT id_usuario, name, lastname, email 
-                       FROM usuarios"""
-            results = DatabaseConnection.fetch_all(query)
-
-            users = []
-            if results:
-                for result in results:
-                    users.append(cls(**dict(zip(['id_usuario', 'name', 'username', 'email','telefono'], result))))
-            return users
-        except Exception as e:
-            print("Error al obtener todos los usuarios:", e)
-            return None
-        finally:
-            DatabaseConnection.close_connection()  # Cerrar la conexión después de realizar la consulta
 
     @classmethod
     def create(cls, user,idhuertas):
@@ -70,26 +76,38 @@ class User(User_date):
         finally:
             DatabaseConnection.close_connection()  # Cerrar la conexión después de realizar la consulta
 
-    @classmethod
-    def update(cls, id_usuario, campo, nuevo_valor):
-        """Actualizar un usuario"""
+    @staticmethod
+    def registrar_asistencia(id_usuario, id_practica, asistio):
         try:
-            if campo == 'name':
-                query = "UPDATE usuarios SET name = %s WHERE id_usuario = %s"
-            elif campo == 'lastname':
-                query = "UPDATE usuarios SET lastname = %s WHERE id_usuario = %s"
-            elif campo == 'email':
-                query = "UPDATE usuarios SET email = %s WHERE id_usuario = %s"
-            else:
-                raise ValueError("Campo no válido para actualización")
-            params = (nuevo_valor, id_usuario)
-            DatabaseConnection.execute_query(query, params=params)
+            # Registrar la asistencia en la tabla 'asistencia'
+            query_asistencia = "INSERT INTO asistencia (id_usuario, asistio) VALUES (%s, %s)"
+            params_asistencia = (id_usuario, asistio)
+            DatabaseConnection.execute_query(query_asistencia, params=params_asistencia)
+
+            # Obtener el ID de la asistencia recién insertada
+            id_asistencia = DatabaseConnection.fetch_one("SELECT LAST_INSERT_ID()")[0]
+
+            # Registrar la relación en la tabla 'practica_asistencia'
+            query_practica_asistencia = "INSERT INTO practica_asistencia (idpractica, id_asistencia) VALUES (%s, %s)"
+            params_practica_asistencia = (id_practica, id_asistencia)
+            DatabaseConnection.execute_query(query_practica_asistencia, params=params_practica_asistencia)
+
             return True
         except Exception as e:
-            print(f"Error al actualizar el campo '{campo}':", e)
+            print("Error al registrar la asistencia:", e)
             return False
         finally:
-            DatabaseConnection.close_connection()  # Cerrar la conexión después de realizar la consulta
+            DatabaseConnection.close_connection()
+
+    @staticmethod
+    def tiene_asistencia_registrada(id_usuario, id_practica):
+        query = "SELECT COUNT(*) FROM asistencia " \
+                "INNER JOIN practica_asistencia " \
+                "ON asistencia.id_asistencia = practica_asistencia.id_asistencia " \
+                "WHERE asistencia.id_usuario = %s AND practica_asistencia.idpractica = %s"
+        params = (id_usuario, id_practica)
+        result = DatabaseConnection.fetch_one(query, params=params)
+        return result and result[0] > 0
     @classmethod
     def delete(cls,id_usuario):
         try:
