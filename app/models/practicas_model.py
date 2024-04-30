@@ -1,17 +1,18 @@
 from ..database import DatabaseConnection
 
 class Practica:
-    def __init__(self, idpractica=None, descripcion=None, fecha=None, responsables=None):
+    def __init__(self, idpractica=None, descripcion=None, fecha=None, responsables=None,titulo=None):
         self.idpractica = idpractica
         self.descripcion = descripcion
         self.fecha = fecha
         self.responsables = responsables
+        self.titulo = titulo
 
     @classmethod
     def get(cls, idhuertas):
         try:
             query = """
-                SELECT practica.idpractica, practica.descripcion, practica.fecha, practica.responsables
+                SELECT practica.idpractica, practica.descripcion, practica.fecha, practica.responsables,practica.titulo
                 FROM practica
                 JOIN practica_huertas ON practica.idpractica = practica_huertas.idpractica
                 WHERE practica_huertas.idhuertas = %s
