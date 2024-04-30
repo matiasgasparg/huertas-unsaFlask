@@ -1,80 +1,130 @@
--- MySQL Workbench Forward Engineering
-
-SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
-SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
-SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+-- Cambio del nombre de la base de datos
+CREATE SCHEMA IF NOT EXISTS `unsahuertas$huertas1` DEFAULT CHARACTER SET utf8mb3 ;
+USE `unsahuertas$huertas1` ;
 
 -- -----------------------------------------------------
--- Schema mydb
+-- Table `unsahuertas$huertas1`.`admin`
 -- -----------------------------------------------------
--- -----------------------------------------------------
--- Schema huerta
--- -----------------------------------------------------
-
--- -----------------------------------------------------
--- Schema huerta
--- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `huerta` DEFAULT CHARACTER SET utf8mb3 ;
-USE `huerta` ;
-
--- -----------------------------------------------------
--- Table `huerta`.`admin`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `huerta`.`admin` (
+CREATE TABLE IF NOT EXISTS `unsahuertas$huertas1`.`admin` (
   `id_admin` INT NOT NULL AUTO_INCREMENT,
   `email` VARCHAR(45) NULL DEFAULT NULL,
   `password` VARCHAR(45) NULL DEFAULT NULL,
   PRIMARY KEY (`id_admin`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 5
+AUTO_INCREMENT = 1
 DEFAULT CHARACTER SET = utf8mb3;
 
+-- -----------------------------------------------------
+-- Table `unsahuertas$huertas1`.`usuarios`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `unsahuertas$huertas1`.`usuarios` (
+  `id_usuario` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(50) NULL DEFAULT NULL,
+  `lastname` VARCHAR(45) NULL DEFAULT NULL,
+  `email` VARCHAR(45) NULL DEFAULT NULL,
+  `telefono` VARCHAR(45) NULL DEFAULT NULL,
+  `asistio` VARCHAR(45) NULL DEFAULT NULL,
+  PRIMARY KEY (`id_usuario`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 1
+DEFAULT CHARACTER SET = utf8mb3;
 
 -- -----------------------------------------------------
--- Table `huerta`.`imagen`
+-- Table `unsahuertas$huertas1`.`asistencia`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `huerta`.`imagen` (
+CREATE TABLE IF NOT EXISTS `unsahuertas$huertas1`.`asistencia` (
+  `id_asistencia` INT NOT NULL AUTO_INCREMENT,
+  `id_usuario` INT NOT NULL,
+  `asistio` TINYTEXT NULL DEFAULT NULL,
+  PRIMARY KEY (`id_asistencia`),
+  INDEX `id_usuario` (`id_usuario` ASC) VISIBLE,
+  CONSTRAINT `asistencia_ibfk_1`
+    FOREIGN KEY (`id_usuario`)
+    REFERENCES `unsahuertas$huertas1`.`usuarios` (`id_usuario`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 1
+DEFAULT CHARACTER SET = utf8mb3;
+
+-- -----------------------------------------------------
+-- Table `unsahuertas$huertas1`.`huertas`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `unsahuertas$huertas1`.`huertas` (
+  `idhuertas` INT NOT NULL AUTO_INCREMENT,
+  `titulo` VARCHAR(45) NULL DEFAULT NULL,
+  `direccion` MEDIUMTEXT NULL DEFAULT NULL,
+  `descripcion` MEDIUMTEXT NULL DEFAULT NULL,
+  `url` TINYTEXT NULL DEFAULT NULL,
+  PRIMARY KEY (`idhuertas`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 1
+DEFAULT CHARACTER SET = utf8mb3;
+
+-- -----------------------------------------------------
+-- Table `unsahuertas$huertas1`.`imagen`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `unsahuertas$huertas1`.`imagen` (
   `idimagen` INT NOT NULL AUTO_INCREMENT,
   `url` VARCHAR(512) NULL DEFAULT NULL,
-  `descripcion` VARCHAR(45) NULL DEFAULT NULL,
+  `descripcion` VARCHAR(512) NULL DEFAULT NULL,
   PRIMARY KEY (`idimagen`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 5
+AUTO_INCREMENT = 1
 DEFAULT CHARACTER SET = utf8mb3;
 
+-- -----------------------------------------------------
+-- Table `unsahuertas$huertas1`.`huertas_has_imagen`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `unsahuertas$huertas1`.`huertas_has_imagen` (
+  `huertas_idhuertas` INT NOT NULL,
+  `imagen_idimagen` INT NOT NULL,
+  PRIMARY KEY (`huertas_idhuertas`, `imagen_idimagen`),
+  INDEX `fk_huertas_has_imagen_imagen1_idx` (`imagen_idimagen` ASC) VISIBLE,
+  INDEX `fk_huertas_has_imagen_huertas1_idx` (`huertas_idhuertas` ASC) VISIBLE,
+  CONSTRAINT `fk_huertas_has_imagen_huertas1`
+    FOREIGN KEY (`huertas_idhuertas`)
+    REFERENCES `unsahuertas$huertas1`.`huertas` (`idhuertas`),
+  CONSTRAINT `fk_huertas_has_imagen_imagen1`
+    FOREIGN KEY (`imagen_idimagen`)
+    REFERENCES `unsahuertas$huertas1`.`imagen` (`idimagen`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb3;
 
 -- -----------------------------------------------------
--- Table `huerta`.`noticias`
+-- Table `unsahuertas$huertas1`.`huertas_has_usuarios`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `huerta`.`noticias` (
+CREATE TABLE IF NOT EXISTS `unsahuertas$huertas1`.`huertas_has_usuarios` (
+  `huertas_idhuertas` INT NOT NULL,
+  `usuarios_id_usuario` INT NOT NULL,
+  PRIMARY KEY (`huertas_idhuertas`, `usuarios_id_usuario`),
+  INDEX `fk_huertas_has_usuarios_usuarios1_idx` (`usuarios_id_usuario` ASC) VISIBLE,
+  INDEX `fk_huertas_has_usuarios_huertas1_idx` (`huertas_idhuertas` ASC) VISIBLE,
+  CONSTRAINT `fk_huertas_has_usuarios_huertas1`
+    FOREIGN KEY (`huertas_idhuertas`)
+    REFERENCES `unsahuertas$huertas1`.`huertas` (`idhuertas`),
+  CONSTRAINT `fk_huertas_has_usuarios_usuarios1`
+    FOREIGN KEY (`usuarios_id_usuario`)
+    REFERENCES `unsahuertas$huertas1`.`usuarios` (`id_usuario`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb3;
+
+-- -----------------------------------------------------
+-- Table `unsahuertas$huertas1`.`noticias`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `unsahuertas$huertas1`.`noticias` (
   `idnoticias` INT NOT NULL AUTO_INCREMENT,
-  `titulo` VARCHAR(45) NULL DEFAULT NULL,
+  `titulo` VARCHAR(512) NULL DEFAULT NULL,
   `subtitulo` MEDIUMTEXT NULL DEFAULT NULL,
   `contenido` MEDIUMTEXT NULL DEFAULT NULL,
   `fecha` VARCHAR(45) NULL DEFAULT NULL,
   PRIMARY KEY (`idnoticias`))
 ENGINE = InnoDB
+AUTO_INCREMENT = 1
 DEFAULT CHARACTER SET = utf8mb3;
 
-
 -- -----------------------------------------------------
--- Table `huerta`.`usuarios`
+-- Table `unsahuertas$huertas1`.`imagen_has_noticias`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `huerta`.`usuarios` (
-  `id_usuario` INT NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(50) NULL DEFAULT NULL,
-  `lastname` VARCHAR(45) NULL DEFAULT NULL,
-  `email` VARCHAR(45) NULL DEFAULT NULL,
-  PRIMARY KEY (`id_usuario`))
-ENGINE = InnoDB
-AUTO_INCREMENT = 11
-DEFAULT CHARACTER SET = utf8mb3;
-
-
--- -----------------------------------------------------
--- Table `huerta`.`imagen_has_noticias`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `huerta`.`imagen_has_noticias` (
+CREATE TABLE IF NOT EXISTS `unsahuertas$huertas1`.`imagen_has_noticias` (
   `imagen_idimagen` INT NOT NULL,
   `noticias_idnoticias` INT NOT NULL,
   PRIMARY KEY (`imagen_idimagen`, `noticias_idnoticias`),
@@ -82,14 +132,57 @@ CREATE TABLE IF NOT EXISTS `huerta`.`imagen_has_noticias` (
   INDEX `fk_imagen_has_noticias_imagen_idx` (`imagen_idimagen` ASC) VISIBLE,
   CONSTRAINT `fk_imagen_has_noticias_imagen`
     FOREIGN KEY (`imagen_idimagen`)
-    REFERENCES `huerta`.`imagen` (`idimagen`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    REFERENCES `unsahuertas$huertas1`.`imagen` (`idimagen`),
   CONSTRAINT `fk_imagen_has_noticias_noticias1`
     FOREIGN KEY (`noticias_idnoticias`)
-    REFERENCES `huerta`.`noticias` (`idnoticias`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    REFERENCES `unsahuertas$huertas1`.`noticias` (`idnoticias`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb3;
+
+-- -----------------------------------------------------
+-- Table `unsahuertas$huertas1`.`practica`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `unsahuertas$huertas1`.`practica` (
+  `idpractica` INT NOT NULL AUTO_INCREMENT,
+  `descripcion` VARCHAR(255) NULL DEFAULT NULL,
+  `fecha` VARCHAR(255) NULL DEFAULT NULL,
+  `responsables` VARCHAR(255) NULL DEFAULT NULL,
+  PRIMARY KEY (`idpractica`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 1
+DEFAULT CHARACTER SET = utf8mb3;
+
+-- -----------------------------------------------------
+-- Table `unsahuertas$huertas1`.`practica_asistencia`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `unsahuertas$huertas1`.`practica_asistencia` (
+  `idpractica` INT NOT NULL,
+  `id_asistencia` INT NOT NULL,
+  PRIMARY KEY (`idpractica`, `id_asistencia`),
+  INDEX `fk_practica_asistencia_asistencia` (`id_asistencia` ASC) VISIBLE,
+  CONSTRAINT `fk_practica_asistencia_asistencia`
+    FOREIGN KEY (`id_asistencia`)
+    REFERENCES `unsahuertas$huertas1`.`asistencia` (`id_asistencia`),
+  CONSTRAINT `fk_practica_asistencia_practica`
+    FOREIGN KEY (`idpractica`)
+    REFERENCES `unsahuertas$huertas1`.`practica` (`idpractica`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb3;
+
+-- -----------------------------------------------------
+-- Table `unsahuertas$huertas1`.`practica_huertas`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `unsahuertas$huertas1`.`practica_huertas` (
+  `idpractica` INT NOT NULL,
+  `idhuertas` INT NOT NULL,
+  PRIMARY KEY (`idpractica`, `idhuertas`),
+  INDEX `fk_practica_huertas_huertas` (`idhuertas` ASC) VISIBLE,
+  CONSTRAINT `fk_practica_huertas_huertas`
+    FOREIGN KEY (`idhuertas`)
+    REFERENCES `unsahuertas$huertas1`.`huertas` (`idhuertas`),
+  CONSTRAINT `fk_practica_huertas_practica`
+    FOREIGN KEY (`idpractica`)
+    REFERENCES `unsahuertas$huertas1`.`practica` (`idpractica`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb3;
 

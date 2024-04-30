@@ -31,8 +31,8 @@ class Practica:
     @classmethod
     def create(cls, practica, idhuertas):
         try:
-            query = "INSERT INTO practica (descripcion, fecha, responsables) VALUES (%s, %s, %s)"
-            params = (practica.descripcion, practica.fecha, practica.responsables)
+            query = "INSERT INTO practica (descripcion, fecha, responsables,titulo) VALUES (%s, %s, %s,%s)"
+            params = (practica.descripcion, practica.fecha, practica.responsables,practica.titulo)
             DatabaseConnection.execute_query(query, params=params)
             
             # Obtener el ID de la práctica recién insertada
@@ -51,14 +51,14 @@ class Practica:
             DatabaseConnection.close_connection()
 
     @classmethod
-    def update(cls, idpractica, descripcion, fecha, responsables):
+    def update(cls, idpractica, descripcion, fecha, responsables,titulo):
         try:
             query = """
                 UPDATE practica
-                SET descripcion = %s, fecha = %s, responsables = %s
+                SET descripcion = %s, fecha = %s, responsables = %s, titulo =%s
                 WHERE idpractica = %s
             """
-            params = (descripcion, fecha, responsables, idpractica)
+            params = (descripcion, fecha, responsables,titulo,idpractica)
             DatabaseConnection.execute_query(query, params=params)
             return True
         except Exception as e:
@@ -97,5 +97,6 @@ class Practica:
             'idpractica': self.idpractica,
             'descripcion': self.descripcion,
             'fecha': self.fecha,
-            'responsables': self.responsables
+            'responsables': self.responsables,
+            'titulo': self.titulo
         }

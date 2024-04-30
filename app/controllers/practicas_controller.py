@@ -19,11 +19,12 @@ class practicasController:
     def create(cls, idhuertas):
         try:
             data = request.json
+            titulo= data['titulo']
             descripcion = data['descripcion']
             fecha = data['fecha']
             responsables = data['responsables']
             
-            new_practica = Practica(descripcion=descripcion, fecha=fecha, responsables=responsables)
+            new_practica = Practica(titulo=titulo,descripcion=descripcion, fecha=fecha, responsables=responsables)
 
             if Practica.create(new_practica, idhuertas):
                 return jsonify({'message': 'Práctica creada exitosamente'}), 201
@@ -36,14 +37,15 @@ class practicasController:
     def update(cls, idpractica):
         try:
             data = request.json
+            titulo = data.get('titulo')
             descripcion = data.get('descripcion')
             fecha = data.get('fecha')
             responsables = data.get('responsables')
 
-            if not (descripcion or fecha or responsables):
+            if not (titulo or descripcion or fecha or responsables):
                 return jsonify({'message': 'No se proporcionaron datos para actualizar'}), 400
 
-            if Practica.update(idpractica, descripcion, fecha, responsables):
+            if Practica.update(idpractica,titulo,descripcion, fecha, responsables):
                 return jsonify({'message': 'Práctica actualizada exitosamente'}), 200
             else:
                 return jsonify({'message': 'No se encontró la práctica'}), 404
